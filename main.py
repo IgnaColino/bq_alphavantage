@@ -80,7 +80,7 @@ class data_updater:
         self.update_market_table()
 
 
-def main():
+def main(event, context):
     start = time.time()
     updater = data_updater(['SNP'], num_stocks=1, tickers=kraken_tickers,
                            project='investing-management')
