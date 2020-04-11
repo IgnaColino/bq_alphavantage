@@ -20,7 +20,8 @@ def load_data_to_bq(df=None, table_name='CRY', dataset='price_data'):
                          WHERE concat(symbol, cast(date as string)) IN
                          (SELECT concat(symbol, cast(MAX(date) as string))
                          FROM `{dataset+"."+table_name}`
-                         GROUP BY symbol)'''
+                         GROUP BY symbol) AND symbol IN
+                         {'("'+'","'.join(df.symbol.unique())+'")'}'''
         delete_DML = client.query(delete_qry)
         delete_DML.result()
         existing = pd.read_gbq(f'''select symbol, max(date) as max_date

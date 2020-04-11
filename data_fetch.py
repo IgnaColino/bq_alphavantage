@@ -55,10 +55,9 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
                     ts, sym = 'Time Series (Daily)', '2. Symbol'
                     para["outputsize"] = "full"
                     para["symbol"] = query_param[market]+code,
-                time.sleep(10)  # 5 requests per minute allowed
                 print(code, end=" ")
                 page = requests.get(url, params=para)
-                time.sleep(5)  # 5 requests per minute allowed
+                time.sleep(13)  # 5 requests per minute allowed
                 if ts in page.json():
                     data2 = pd.DataFrame.from_dict(page.json()[ts],
                                                    orient='index', dtype=float)
@@ -94,4 +93,4 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
 
 if __name__ == "__main__":
     # pass
-    data = get_adjusted_data(market='CRY', tickers=['ADA', 'MLN'])
+    data = get_adjusted_data(market='SNP', tickers=['AAPL'])

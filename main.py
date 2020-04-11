@@ -26,6 +26,7 @@ class data_updater:
         self.dataset = dataset
         self.project = project
         self.table_update = None
+        self.max_date = None
 
     def validate_dataset(self):
         client = Client(project='investing-management')
@@ -50,6 +51,7 @@ class data_updater:
                 pd.read_gbq(f'''select symbol, max(date) as max_date
                             from {self.dataset+"."+table}
                             group by symbol''', dialect="legacy")
+            print(max_dates.sort_values('max_date', ascending=False).head())
             if table != 'CRY':
                 ttl_tickers = pd.read_csv(ticker_list[table]).symbol
             else:
@@ -57,12 +59,15 @@ class data_updater:
                                            columns=['symbol'])
             ttl_tickers = pd.merge(ttl_tickers, max_dates, on='symbol',
                                    suffixes=('', '_y'), how='left')
-            condition = \
-                (pd.to_datetime(ttl_tickers.max_date, utc=True) <
-                 pd.to_datetime(pd.to_datetime('today').date(), utc=True)) |\
-                (ttl_tickers.max_date.isnull())
-            ttl_tickers = ttl_tickers.loc[condition, :]
-            self.tickers = ttl_tickers.symbol.to_list()
+            self.max_date = ttl_tickers.max_date.max()
+            if not ttl_tickers.loc[ttl_tickers.max_date < self.max_date,
+                                   :].empty:
+                condition = (ttl_tickers.max_date < self.max_date) |\
+                    (ttl_tickers.max_date.isnull())
+                ttl_tickers = ttl_tickers.loc[condition, :]
+            ttl_tickers.sort_values('max_date', ascending=False,
+                                    inplace=True)
+            self.tickers = ttl_tickers.symbol.to_list()[:self.num_stocks]
             self.table_update = table
             if len(self.tickers) > 0:
                 break
@@ -80,7 +85,7 @@ class data_updater:
         self.update_market_table()
 
 
-def main(event, context):
+def main():
     start = time.time()
     updater = data_updater(['SNP'], num_stocks=1, tickers=kraken_tickers,
                            project='investing-management')
