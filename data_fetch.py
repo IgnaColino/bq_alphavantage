@@ -24,7 +24,6 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
         stock_list = {'ASX': '20180801-asx200.csv',
                       'SNP': '20180922_SP500_list.csv',
                       'CRY': 'digital_currency_list.CSV'}
-        query_param = {'ASX': 'ASX:', 'SNP': '', 'CRY': ''}
         symbol_list = pd.read_csv(stock_list[market], header=1)
         names = ['open', 'high', 'low', 'close', 'adjusted_close', 'volume',
                  'dividend_amount', 'split_coefficient', 'symbol', 'date']
@@ -40,7 +39,7 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
             symbol_list = symbol_list.sample(num_stocks)
         # Loop through stock list and concatenate
         for code in symbol_list.iloc[:, 0]:
-            if query_param[market]+code not in data['Symbol'].unique():
+            if code not in data['Symbol'].unique():
                 # query structure
                 para = {"function": "TIME_SERIES_DAILY_ADJUSTED",
                         "apikey": os.getenv('ALPHA_VANTAGE')}
@@ -54,7 +53,7 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
                 else:
                     ts, sym = 'Time Series (Daily)', '2. Symbol'
                     para["outputsize"] = "full"
-                    para["symbol"] = query_param[market]+code,
+                    para["symbol"] = code,
                 print(code, end=" ")
                 page = requests.get(url, params=para)
                 time.sleep(13)  # 5 requests per minute allowed

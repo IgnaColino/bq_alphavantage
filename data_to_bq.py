@@ -9,12 +9,12 @@ from google.cloud.bigquery import Client
 import pandas as pd
 
 
-def load_data_to_bq(df=None, table_name='CRY', dataset='price_data'):
+def load_data_to_bq(df=None, table_name='CRY', dataset='price_data',
+                    project=None):
     client = Client()
     table = client.get_table(".".join([client.project, dataset, table_name]))
     if table.num_rows == 0 and df is not None:
         df.to_gbq(".".join([dataset, table_name]), if_exists='append')
-        print(f"{len(df)} rows inserted")
     else:
         delete_qry = f'''DELETE FROM `{dataset+"."+table_name}` AS t2
                          WHERE concat(symbol, cast(date as string)) IN
@@ -28,10 +28,12 @@ def load_data_to_bq(df=None, table_name='CRY', dataset='price_data'):
                                from {dataset+"."+table_name}
                                group by symbol''', dialect="legacy")
         df = df.merge(existing, on='symbol', how='left')
-        df = df.loc[df.date.dt.tz_localize('UTC') > df.max_date, :]
+        df = df.loc[(df.date.dt.tz_localize('UTC') > df.max_date) |
+                    df.max_date.isnull(), :]
         df.drop('max_date', axis=1, inplace=True)
-        df.to_gbq(".".join([dataset, table_name]), if_exists='append')
-        print(f"{len(df)} rows inserted")
+        df.to_gbq(".".join([dataset, table_name]), if_exists='append',
+                  project_id=project)
+    print(f"{len(df)} rows inserted")
 
 
 if __name__ == "__main__":
