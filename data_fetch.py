@@ -18,7 +18,6 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
     """This function outputs a csv file with the historical daily price data
     for the corresponding market. The stock codes are picked up from the csv
     files in the folder"""
-    start = time.time()
     try:
         # Parameters for API request
         stock_list = {'ASX': '20180801-asx200.csv',
@@ -54,7 +53,6 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
                     ts, sym = 'Time Series (Daily)', '2. Symbol'
                     para["outputsize"] = "full"
                     para["symbol"] = code,
-                print(code, end=" ")
                 page = requests.get(url, params=para)
                 time.sleep(13)  # 5 requests per minute allowed
                 if ts in page.json():
@@ -68,11 +66,7 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
                                      sort=True)
 
         # Print Summary and export to csv
-        print('Nbr of datapoints:', len(data))
-        print('Nbr of Companies:', len(data['Symbol'].unique()))
-        if len(data) > 0:
-            print('Aprox years of data per company:',
-                  round(len(data)/len(data['Symbol'].unique())/240, 2))
+        print(data.Symbol.unique())
         if market == 'CRY':
             data.drop(columns=cry_names_drop, inplace=True)
         data.rename(columns={i: j for i, j in zip(data.columns, names)},
@@ -84,12 +78,14 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
         print(error)
     finally:
         # if the api returns an error still return the fetched tickers
-        print(f"Duration = {round(time.time()-start,1)}s")
         return data
-    print(f"Duration = {round(time.time()-start,1)}s")
     return data
+
+
+def main():
+    return get_adjusted_data(market='SNP', tickers=['AAPL'])
 
 
 if __name__ == "__main__":
     # pass
-    data = get_adjusted_data(market='SNP', tickers=['AAPL'])
+    main()

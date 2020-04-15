@@ -26,6 +26,9 @@ class data_updater:
         self.project = project
         self.table = table
         self.max_date = None
+        self.tz = {'SNP': 'America/New_York',
+                   'ASX': 'Australia/Sydney',
+                   'CRY': 'UTC'}
 
     def validate_dataset(self):
         client = Client(project='investing-management')
@@ -56,15 +59,24 @@ class data_updater:
         ttl_tickers = pd.merge(ttl_tickers, max_dates, on='symbol',
                                suffixes=('', '_y'), how='left')
         self.max_date = ttl_tickers.max_date.max()
-        if not ttl_tickers.loc[ttl_tickers.max_date < self.max_date,
-                               :].empty:
+        max_ny_time = self.max_date.date()
+        comparison = pd.Timestamp.today(tz=self.tz[self.table]).date() -\
+            pd.Timedelta('1 days')
+        if max_ny_time < comparison:
+            ttl_tickers.sort_values(['max_date', 'symbol'],
+                                    ascending=[False, True],
+                                    inplace=True)
+        elif not ttl_tickers.loc[ttl_tickers.max_date < self.max_date,
+                                 :].empty:
             condition = (ttl_tickers.max_date < self.max_date) |\
                 (ttl_tickers.max_date.isnull())
             ttl_tickers = ttl_tickers.loc[condition, :]
-            ttl_tickers.sort_values('max_date', ascending=False,
+            ttl_tickers.sort_values(['max_date', 'symbol'],
+                                    ascending=[False, True],
                                     inplace=True)
         else:
-            ttl_tickers.sort_values('max_date', ascending=False,
+            ttl_tickers.sort_values(['max_date', 'symbol'],
+                                    ascending=[False, True],
                                     na_position='first', inplace=True)
         self.tickers = ttl_tickers.symbol.to_list()[:self.num_stocks]
 
@@ -82,7 +94,7 @@ class data_updater:
 
 def main():
     start = time.time()
-    updater = data_updater(table='SNP', num_stocks=1, tickers=None,
+    updater = data_updater(table='SNP', num_stocks=2, tickers=None,
                            project='investing-management')
     updater.update_bq_db()
     print(f'Function runtime: {time.time()-start}s')
