@@ -66,7 +66,7 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
                                      sort=True)
 
         # Print Summary and export to csv
-        print(data.Symbol.unique())
+        print(f'Tickers obtained = {data.Symbol.sort_values().unique()}')
         if market == 'CRY':
             data.drop(columns=cry_names_drop, inplace=True)
         data.rename(columns={i: j for i, j in zip(data.columns, names)},
@@ -83,7 +83,7 @@ def get_adjusted_data(market='ASX', num_stocks=None, tickers=None):
 
 
 def main():
-    return get_adjusted_data(market='SNP', tickers=['AAPL'])
+    return get_adjusted_data(market='SNP', num_stocks=3)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ from data_to_bq import load_data_to_bq
 from data_fetch import get_adjusted_data
 from create_bq_table import create_bq_dataset, create_bq_table
 import pandas as pd
-import time
 
 
 kraken_tickers = ['BTC', 'ETC']
@@ -79,6 +78,7 @@ class data_updater:
                                     ascending=[False, True],
                                     na_position='first', inplace=True)
         self.tickers = ttl_tickers.symbol.to_list()[:self.num_stocks]
+        print(f'Tickers to fetch = {self.tickers}')
 
     def update_market_table(self):
         data = get_adjusted_data(market=self.table, num_stocks=self.num_stocks,
@@ -93,11 +93,9 @@ class data_updater:
 
 
 def main():
-    start = time.time()
     updater = data_updater(table='SNP', num_stocks=2, tickers=None,
                            project='investing-management')
     updater.update_bq_db()
-    print(f'Function runtime: {time.time()-start}s')
 
 
 if __name__ == '__main__':

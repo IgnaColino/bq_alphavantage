@@ -33,7 +33,6 @@ def load_data_to_bq(df=None, table_name='CRY', dataset='price_data',
         df.drop('max_date', axis=1, inplace=True)
         df.to_gbq(".".join([dataset, table_name]), if_exists='append',
                   project_id=project)
-    print(f"{len(df)} rows inserted")
 
 
 if __name__ == "__main__":
